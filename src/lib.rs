@@ -49,16 +49,20 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
 pub fn search(config: Config) -> Result<(), Box<dyn Error>> {
     let contents = fs::read_to_string(config.value)?;
 
-    let results: Vec<&str> = contents
-        .lines()
-        .filter(|line| line.contains(&config.query))
-        .collect();
+    let results = filter_contents(&config.query, &contents);
 
     for line in results {
         println!("{line}")
     }
 
     Ok(())
+}
+
+pub fn filter_contents<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
+    contents
+        .lines()
+        .filter(|line| line.contains(query))
+        .collect()
 }
 
 pub fn read_lines(file_path: &str) -> Result<(), Box<dyn Error>> {
@@ -111,4 +115,23 @@ pub fn find_file(directory: &str, filename: &str) -> Result<(), Box<dyn Error>> 
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn one_result() {
+        let query = "duct";
+        let contents = "\
+Rust:
+safe, fast, productive.
+Pick three.";
+
+        assert_eq!(
+            vec!["safe, fast, productive."],
+            filter_contents(query, contents)
+        );
+    }
 }
